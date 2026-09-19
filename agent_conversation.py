@@ -36,7 +36,7 @@ def agent_turn(messages, verbose: bool = True):
     
     for step in range(1,MAX_STEPS+1):
         reply = chat(messages, tools=SCHEMAS)["message"]
-        messages.append({"role": "assistant", "content": reply})
+        messages.append(reply)
 
         calls = reply.get("tool_calls") or []
 
@@ -99,7 +99,7 @@ def repl(path):
         List the triples this question requires before calling anything. Then obtain a tool result for each."""})
         
        
-        reply = agent_turn(payload, verbose=True)
+        reply = agent_turn(messages, verbose=True)
         print(f"bot> {reply}\n")
 
         

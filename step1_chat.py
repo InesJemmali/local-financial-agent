@@ -38,8 +38,10 @@ def chat(messages,tools=None, think=False):
         json = payload,
         timeout = 600
     )
-
-    response.raise_for_status()
+   
+    if response.status_code != 200:
+        raise RuntimeError(f"{response.status_code} from Ollama: {response.text}")
+    return response.json()
 
     return response.json()
 

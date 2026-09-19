@@ -6,7 +6,6 @@ MAX_GROUPS = 40          # cap result size so the context window survives
 
 
 def _load(path: str) -> pd.DataFrame:
-    """Load CSV or Excel. Parse anything that looks like a date."""
     if path.lower().endswith((".xlsx", ".xls")):
         df = pd.read_excel(path)
     else:
@@ -16,7 +15,6 @@ def _load(path: str) -> pd.DataFrame:
         if df[c].dtype == object and ("date" in c.lower() or "time" in c.lower()):
             df[c] = pd.to_datetime(df[c], errors="coerce")
     return df
-
 
 def _check(df, col, name="column"):
     if col not in df.columns:
