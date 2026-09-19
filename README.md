@@ -284,9 +284,9 @@ financial-agent/
 ├── tools.py                 # tool functions, REGISTRY, SCHEMAS
 ├── step_chat.py             # the only place that touches HTTP
 ├── make_data.py             # generates the synthetic dataset
-├── data/
-│   └── tx.csv
-└── requirements.txt
+└──  data/
+    └── tx.csv
+
 ```
 
 Four modules, and the separation is the point.
