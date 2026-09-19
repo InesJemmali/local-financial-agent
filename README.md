@@ -283,9 +283,10 @@ financial-agent/
 ├── agent_conversation.py    # the loop, the system prompt, the REPL
 ├── tools.py                 # tool functions, REGISTRY, SCHEMAS
 ├── step_chat.py             # the only place that touches HTTP
-└──  make_data.py             # generates the synthetic dataset
- 
-
+├── make_data.py             # generates the synthetic dataset
+├── data/
+│   └── tx.csv
+└── requirements.txt
 ```
 
 Four modules, and the separation is the point.
@@ -307,20 +308,40 @@ apart is what lets the same loop serve a web UI later without a rewrite.
 This is a prototype. It has real failure modes and pretending otherwise would
 make it less useful.
 
-**The model can mislabel a correct number.** In testing it computed the mean
-amount per account type, then reported that figure as the total. The number was
-real and pandas produced it. The sentence describing it was false. This is the
-failure mode that provenance checking does not catch, because the value is
-genuinely in the tool output. Verifying that the label matches the operation
-needs a separate mechanism, which is not implemented yet.
+**Three hallucination types observed in testing.** Each was produced by the agent
+on the sample dataset, and each needs a different defence.
 
-**System prompt rules are not enforced.** A rule stating "a mean is not a total"
-sat in the system prompt and the model ignored it. The same instruction placed in
-the user turn was followed. Prompt rules are suggestions with no mechanism behind
-them, and they fail silently.
+*Mislabelled result.* Asked to compare average amounts per account type and then
+report the total for the higher one, it computed the mean (102.26) and described
+that figure as the total. The number was real and pandas produced it. The sentence
+describing it was false. Provenance checking does not catch this, because the value
+is genuinely in the tool output. The operation label has to be checked against the
+surrounding words.
 
-**No output validation.** Nothing checks that numbers in the final answer appear
-in any tool result. Phase 9 of the build plan.
+*Derived number.* On a later run of the same question, it took a row count from an
+earlier turn (2498) and the mean from the current one, multiplied them, and reported
+`2498 x 102.26 = 255,445.48`. The correct total is 255,434.67. No tool produced the
+number it reported, and it showed the multiplication in the answer. A reader would
+have no reason to doubt it. This is the type that a provenance check catches
+outright: extract every number from the answer, verify it appears in some tool
+result, flag the rest.
+
+*Invented values.* Asked to profile the dataset, it reported that `Account_Type`
+has two values "which could be something like Savings and Checking". The real values
+are Savings and Current, and `value_counts` would have returned them. The same
+problem as an invented number, in string form, and the system prompt only addresses
+numbers.
+
+**System prompt rules did not prevent any of them.** The prompt opens with "You
+cannot calculate. Every number in your answer must come from a tool result." The
+derived-number failure violated that line and narrated the violation. A separate
+rule stating "a mean is not a total" sat in the system prompt and was ignored, while
+the same instruction placed in the user turn was followed. Prompt rules have no
+enforcement mechanism behind them and fail silently.
+
+**No output validation yet.** Nothing checks that numbers in the final answer appear
+in any tool result. That layer is the next piece of work, and the three failures
+above are what motivate it.
 
 **Context window.** Ollama defaults to 4096 tokens. Tool results are verbose, and
 a long conversation will overflow it. Overflow is silent: the model forgets early
