@@ -283,9 +283,8 @@ financial-agent/
 ├── agent_conversation.py    # the loop, the system prompt, the REPL
 ├── tools.py                 # tool functions, REGISTRY, SCHEMAS
 ├── step_chat.py             # the only place that touches HTTP
-├── make_data.py             # generates the synthetic dataset
-└──  data/
-    └── tx.csv
+└──  make_data.py             # generates the synthetic dataset
+ 
 
 ```
 
